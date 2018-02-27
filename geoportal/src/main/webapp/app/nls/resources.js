@@ -14,9 +14,9 @@
  */
 define({
   root: {
-    
+
     general: {
-      cancel: "Cancel",
+      cancel: "Cancelx",
       close: "Close",
       del: "Delete",
       error: "Error",
@@ -28,7 +28,7 @@ define({
       uploading: "Uploading...",
       working: "...",
     },
-    
+
     nav: {
       brand: "Geoportal",
       home: "Home",
@@ -46,7 +46,7 @@ define({
         uploadMetadata: "Upload Metadata"
       }
     },
-    
+
     login: {
       caption: "Sign In",
       label: "Sign In",
@@ -55,7 +55,7 @@ define({
       incomplete: "A Username and Password are required.",
       invalidCredentials: "Invalid credentials."
     },
-    
+
     search: {
       criteria: {
         map: "Map",
@@ -212,7 +212,7 @@ define({
         error: "Error loading preview"
       }
     },
-    
+
     item: {
       actions: {
         html: "HTML",
@@ -234,7 +234,7 @@ define({
         status: "Service availability = ${score}%"
       }
     },
-    
+
     content: {
       changeOwner: {
         caption: "Change Owner",
@@ -248,7 +248,7 @@ define({
         button: "Upload"
       }
     },
-    
+
     metadataEditor: {
       caption: "Metadata",
       loading: "Starting editor...",
@@ -256,7 +256,7 @@ define({
       asTemplatePrompt: "Reset identifiers",
       xmlViewOnly: "The type of metadata associated with this item is not supported by the editor."
     },
-    
+
     errorTranslations: {
       "Unrecognized metadata type.": null,
       "Access denied - not owner.": null,
