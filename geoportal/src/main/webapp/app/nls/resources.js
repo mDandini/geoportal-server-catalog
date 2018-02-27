@@ -16,7 +16,7 @@ define({
   root: {
 
     general: {
-      cancel: "Cancelx",
+      cancel: "Cancelxx",
       close: "Close",
       del: "Delete",
       error: "Error",
