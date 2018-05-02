@@ -59,8 +59,11 @@
     }},
 
     execute: {writable:true,value:function(task) {
-      if (!task.request.hasQueryParameters()) {
+      console.log("Request", JSON.stringify(task.request, null, 2));
+      if (!task.request.hasQueryParameters() && !task.request.body) {
         return this.getCapabilities(task);
+      } else if (!task.request.hasQueryParameters() && task.request.body) {
+        return this.getRecords(task);
       }
 
       var msg, ows, promise;
