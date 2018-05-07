@@ -449,6 +449,7 @@
             }
           };
         }
+        // console.log("elastic request data", JSON.stringify(targetRequest.searchCriteria, null, 2));
         if (task.verbose) console.log("sending url:",url,", postdata:",data);
         return task.context.sendHttpRequest(task,url,data,dataContentType,options);
 

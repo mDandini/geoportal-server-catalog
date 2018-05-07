@@ -59,7 +59,7 @@
     }},
 
     execute: {writable:true,value:function(task) {
-      console.log("Request", JSON.stringify(task.request, null, 2));
+      // console.log("Request", JSON.stringify(task.request, null, 2));
       if (!task.request.hasQueryParameters() && !task.request.body) {
         return this.getCapabilities(task);
       } else if (!task.request.hasQueryParameters() && task.request.body) {
@@ -555,6 +555,7 @@
     search: {writable:true,value:function(task) {
       var promise = task.context.newPromise();
       task.request.parseF(task);
+      // console.log("Task", JSON.stringify(task, null, 2));
       this.setWriter(task);
       task.target.search(task).then(function(searchResult){
         if (task.request.isItemByIdRequest && (!searchResult.items || searchResult.items.length === 0)) {
