@@ -158,6 +158,8 @@
       }
       var entry = task.target.itemToAtomEntry(task,item);
 
+      // console.log("entry", JSON.stringify(item, null, 2));
+
       var id = entry.id;
       var title = "Untitled";
       if (typeof entry.title === "string" && entry.title.length > 0) {
@@ -184,7 +186,26 @@
           this.addAtomPerson(task,xmlBuilder,task.uris.URI_DC,"creator",entry.author);
           this.addAtomPerson(task,xmlBuilder,task.uris.URI_DC,"contributor",entry.contributor);
           this.addAtomText(task,xmlBuilder,task.uris.URI_DC,"rights",entry.rights);
-          this.addAtomLink(task,xmlBuilder,task.uris.URI_DCT,"references",entry.link);
+         
+          // Search for a service link and add it to the document
+          var test = function (l) {
+            return l.href.endsWith("MapServer") || l.href.endsWith("FeatureServer");
+          };
+
+          if (entry.link && entry.link.some(test)) {
+            // Move the service link to the first element
+            var ind = -1;
+            entry.link.forEach(function (l, i) {
+              ind = test(l) ? i : ind;
+            });
+            var tmp = entry.link[0];
+            entry.link[0] = entry.link[ind];
+            entry.link[ind] = tmp;
+
+            this.addAtomLink(task,xmlBuilder,task.uris.URI_DCT,"references",entry.link);
+            console.log("Setting Live Data for", title, entry.link[0].href);
+            xmlBuilder.writeElement(task.uris.URI_DC, "type","liveData");
+          }
         }
       }
 
