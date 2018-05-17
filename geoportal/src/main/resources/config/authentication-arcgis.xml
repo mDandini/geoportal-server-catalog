@@ -16,6 +16,13 @@
     <beans:property name="allUsersCanPublish" value="true" />
     <beans:property name="rolePrefix" value="ROLE_" />
     <beans:property name="showMyProfileLink" value="true" />
+
+    <!-- PKI-protected portal properties 
+    <beans:property name="clientCertificatePath" value="/temp/certs/pki.p12"/>
+    <beans:property name="clientCertificateKey" value="password"/>
+    <beans:property name="trustStorePath" value="/temp/certs/esri.pfx"/>
+    <beans:property name="trustStoreKey" value="password"/>
+     -->
   </beans:bean>
 
 	<security:authentication-manager id="authenticationManager" alias="authenticationManager">

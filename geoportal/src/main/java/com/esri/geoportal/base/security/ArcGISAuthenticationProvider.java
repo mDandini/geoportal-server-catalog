@@ -13,10 +13,7 @@
  * limitations under the License.
  */
 package com.esri.geoportal.base.security;
-import com.esri.geoportal.base.util.JsonUtil;
-import com.esri.geoportal.base.util.Val;
-import com.esri.geoportal.context.GeoportalContext;
-
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URLEncoder;
@@ -26,7 +23,15 @@ import java.util.List;
 
 import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.net.ssl.SSLContext;
 
+import com.esri.geoportal.base.util.JsonUtil;
+import com.esri.geoportal.base.util.Val;
+import com.esri.geoportal.context.GeoportalContext;
+
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
@@ -34,6 +39,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -43,6 +49,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ResourceUtils;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -63,6 +70,11 @@ public class ArcGISAuthenticationProvider implements AuthenticationProvider {
   private String geoportalPublishersGroupId;  
   private String rolePrefix;
   private boolean showMyProfileLink = false;
+
+  private String clientCertificatePath = null;
+  private String clientCertificateKey = null;
+  private String trustStorePath =  null;
+  private String trustStoreKey =  null;
 
   /** True if all authenticated users shoudl have a Publisher role. */
   public boolean getAllUsersCanPublish() {
@@ -145,6 +157,56 @@ public class ArcGISAuthenticationProvider implements AuthenticationProvider {
     this.showMyProfileLink = showMyProfileLink;
   }
 
+    /**
+   * @return the clientCertificatePath
+   */
+  public String getClientCertificatePath() {
+    return clientCertificatePath;
+  }
+  /**
+   * @param clientCertificatePath the clientCertificatePath to set
+   */
+  public void setClientCertificatePath(String clientCertificatePath) {
+    this.clientCertificatePath = clientCertificatePath;
+  }
+  /**
+   * @return the clientCertificateKey
+   */
+  public String getClientCertificateKey() {
+    return clientCertificateKey;
+  }
+  /**
+   * @param clientCertificateKey the clientCertificateKey to set
+   */
+  public void setClientCertificateKey(String clientCertificateKey) {
+    this.clientCertificateKey = clientCertificateKey;
+  }
+
+  /**
+   * @return the trustStorePath
+   */
+  public String getTrustStorePath() {
+    return trustStorePath;
+  }
+  /**
+   * @param trustStorePath the trustStorePath to set
+   */
+  public void setTrustStorePath(String trustStorePath) {
+    this.trustStorePath = trustStorePath;
+  }
+  /**
+   * @return the trustStoreKey
+   */
+  public String getTrustStoreKey() {
+    return trustStoreKey;
+  }
+  /**
+   * @param trustStoreKey the trustStoreKey to set
+   */
+  public void setTrustStoreKey(String trustStoreKey) {
+    this.trustStoreKey = trustStoreKey;
+  }
+
   /** Methods =============================================================== */
   
   /**
@@ -180,8 +242,8 @@ public class ArcGISAuthenticationProvider implements AuthenticationProvider {
       url += "?f=json&token="+URLEncoder.encode(token,"UTF-8");
     } catch (UnsupportedEncodingException e) {}
     */
-    
-    RestTemplate rest = new RestTemplate();
+
+    RestTemplate rest = getRestTemplate();
     HttpHeaders headers = new HttpHeaders();
     if (referer != null) {
       headers.add("Referer",referer);
@@ -189,12 +251,19 @@ public class ArcGISAuthenticationProvider implements AuthenticationProvider {
     HttpEntity<String> requestEntity = new HttpEntity<String>(headers);
     ResponseEntity<String> responseEntity = rest.exchange(url,HttpMethod.GET,requestEntity,String.class);
     String response = responseEntity.getBody();
+
     //System.err.println(response);;
     //if (response != null) LOGGER.trace(response);
     if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
       throw new AuthenticationServiceException("Error communicating with the authentication service.");
     }
     JsonObject jso = (JsonObject)JsonUtil.toJsonStructure(response);
+
+    // Check for error from portal
+    if (jso.containsKey("error")) {
+      JsonObject errObj = jso.getJsonObject("error");
+      throw new AuthenticationServiceException("Error communicating with authenticaton service: " + errObj.getString("message"));
+    }
 
     if (jso.containsKey("role") && !jso.isNull("role")) {
       String role = jso.getString("role");
@@ -304,7 +373,7 @@ public class ArcGISAuthenticationProvider implements AuthenticationProvider {
       content.append("&client=").append(URLEncoder.encode("referer","UTF-8"));
     } catch (UnsupportedEncodingException e) {}
 
-    RestTemplate rest = new RestTemplate();
+    RestTemplate rest = getRestTemplate();
     HttpHeaders headers = new HttpHeaders();
     headers.add("Content-Type","application/x-www-form-urlencoded");
     HttpEntity<String> requestEntity = new HttpEntity<String>(content.toString(),headers);
@@ -373,5 +442,39 @@ public class ArcGISAuthenticationProvider implements AuthenticationProvider {
   public boolean supports(Class<?> authentication) {
     return authentication.equals(UsernamePasswordAuthenticationToken.class);
   }
+
+  private RestTemplate getRestTemplate() {
+    LOGGER.trace("ArcGISAuthenticationProvider:getRestTemplate");
+
+    RestTemplate template = null;
+
+    // Determine if we need to set up a client certificate
+    if (this.getClientCertificatePath() != null && this.getClientCertificateKey() != null) {
+      // Set up the SSL connection as necessary
+      SSLContext sslContext = null;
+      try {
+        char[] password = this.getClientCertificateKey().toCharArray();
+        char[] trustPwd = this.getTrustStoreKey().toCharArray();
+
+        // Load in the keystore
+        File key = ResourceUtils.getFile(this.getClientCertificatePath()); 
+        File trustStore = ResourceUtils.getFile(this.getTrustStorePath());
+
+        sslContext = SSLContextBuilder.create().loadKeyMaterial(key, password, password).loadTrustMaterial(trustStore, trustPwd).build();
+      } catch (Exception e) {
+        LOGGER.error("Exception while trying to create SSL context", e);
+      }
+
+      HttpClient client = HttpClients.custom().setSSLContext(sslContext).build();
+      HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(client);
+
+      template = new RestTemplate(factory);
+    } else {
+      template = new RestTemplate();
+    }
+
+    return template;
+  }
+
 
 }
