@@ -230,18 +230,22 @@ public class ArcGISAuthenticationProvider implements AuthenticationProvider {
     boolean hasOrgPubRole = false;
     boolean hasOrgUserRole = false; 
 
-    String restBaseUrl = this.getRestUrl();
-    String url = restBaseUrl+"/community/self/";
+    StringBuilder url = new StringBuilder(this.getRestUrl());
+    if (url.charAt(url.length() - 1) == '/') {
+      url.deleteCharAt(url.length() - 1);
+    }
+
     try {
-      url += "?f=json&token="+URLEncoder.encode(token,"UTF-8");
+      if (getClientCertificateKey() != null && getClientCertificatePath() != null) {
+        url.append("/community/users/");
+        url.append(URLEncoder.encode(username,"UTF-8"));
+        url.append("?f=json");
+      } else {
+        url.append("/community/self");
+        url.append("?f=json&token=");
+        url.append(URLEncoder.encode(token, "UTF-8"));
+      }
     } catch (UnsupportedEncodingException e) {}
-    /*
-    String url = restBaseUrl+"/community/users/";
-    try {
-      url += URLEncoder.encode(username,"UTF-8");
-      url += "?f=json&token="+URLEncoder.encode(token,"UTF-8");
-    } catch (UnsupportedEncodingException e) {}
-    */
 
     RestTemplate rest = getRestTemplate();
     HttpHeaders headers = new HttpHeaders();
@@ -249,7 +253,7 @@ public class ArcGISAuthenticationProvider implements AuthenticationProvider {
       headers.add("Referer",referer);
     };
     HttpEntity<String> requestEntity = new HttpEntity<String>(headers);
-    ResponseEntity<String> responseEntity = rest.exchange(url,HttpMethod.GET,requestEntity,String.class);
+    ResponseEntity<String> responseEntity = rest.exchange(url.toString(),HttpMethod.GET,requestEntity,String.class);
     String response = responseEntity.getBody();
 
     //System.err.println(response);;
