@@ -397,8 +397,7 @@ public class ArcGISAuthenticationProvider implements AuthenticationProvider {
    * @return the url
    */
   public String getPortalUrl() {
-    String authorizeUrl = this.getAuthorizeUrl();
-    return authorizeUrl.substring(0,authorizeUrl.indexOf("/sharing/"))+"";
+    return getRestUrl();
   }
 
   /**
