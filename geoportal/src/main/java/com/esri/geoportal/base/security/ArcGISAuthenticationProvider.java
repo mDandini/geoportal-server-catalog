@@ -235,8 +235,10 @@ public class ArcGISAuthenticationProvider implements AuthenticationProvider {
       url.deleteCharAt(url.length() - 1);
     }
 
+    // If we're using PKI, we need to go to the "/users" endpoint because we're
+    // logging in as an admin instead of the calling account.
     try {
-      if (getClientCertificateKey() != null && getClientCertificatePath() != null) {
+      if (isPKI()) {
         url.append("/community/users/");
         url.append(URLEncoder.encode(username,"UTF-8"));
         url.append("?f=json");
@@ -446,13 +448,18 @@ public class ArcGISAuthenticationProvider implements AuthenticationProvider {
     return authentication.equals(UsernamePasswordAuthenticationToken.class);
   }
 
+  /**
+   * Gets the appropriate {@link RestTemplate} for the application
+   * 
+   * @return the rest template to use.
+   */
   private RestTemplate getRestTemplate() {
     LOGGER.trace("ArcGISAuthenticationProvider:getRestTemplate");
 
     RestTemplate template = null;
 
     // Determine if we need to set up a client certificate
-    if (this.getClientCertificatePath() != null && this.getClientCertificateKey() != null) {
+    if (isPKI()) {
       // Set up the SSL connection as necessary
       SSLContext sslContext = null;
       try {
@@ -479,5 +486,13 @@ public class ArcGISAuthenticationProvider implements AuthenticationProvider {
     return template;
   }
 
+  /**
+   * Determines if we're using PKI for authentication or not.
+   * 
+   * @return true if we're using PKI, false otherwise
+   */
+  private boolean isPKI() {
+    return (getClientCertificatePath() != null && getClientCertificateKey() != null && getTrustStorePath() != null && getTrustStoreKey() != null);
+  }
 
 }
