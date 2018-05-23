@@ -4,7 +4,6 @@ import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
-import java.io.IOException;
 import java.util.Date;
 
 import javax.json.Json;
@@ -13,10 +12,11 @@ import javax.json.JsonObject;
 import com.esri.testutil.TestService;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
-import org.mockserver.integration.ClientAndServer;
+import org.mockserver.client.server.MockServerClient;
+import org.mockserver.junit.MockServerRule;
 import org.mockserver.model.HttpStatusCode;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -26,15 +26,17 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 public class ArcGISAuthenticationProviderTest {
 
-    // Test classes
+    // Setup mockserver for testing
+    @Rule
+    public MockServerRule mockServerRule = new MockServerRule(this, 5000);
+    private MockServerClient mockServer;
+
+    // Set up spring classes
     private static ApplicationContext applicationContext = null;
-    private static ClientAndServer mockServer;
 
     @BeforeClass
     public static void setUpBeforeClass() {
         applicationContext = new ClassPathXmlApplicationContext("config/test-app-security.xml");
-
-        mockServer = new ClientAndServer(5000);
     }
 
     @After
@@ -42,14 +44,8 @@ public class ArcGISAuthenticationProviderTest {
         mockServer.reset();
     }
 
-    @AfterClass
-    public static void tearDownAfterclass() throws IOException {
-        mockServer.stop();
-        mockServer.close();
-    }
-
     @Test
-    public void test() {
+    public void testUsernamePassword() {
         
         String token = "abcde123";
 
