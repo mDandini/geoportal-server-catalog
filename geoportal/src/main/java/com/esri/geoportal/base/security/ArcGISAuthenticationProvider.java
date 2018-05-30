@@ -34,6 +34,9 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -56,7 +59,7 @@ import org.springframework.web.client.RestTemplate;
  * Authentication for ArcGIS OAuth2.
  */
 @Component
-public class ArcGISAuthenticationProvider implements AuthenticationProvider {
+public class ArcGISAuthenticationProvider implements AuthenticationProvider, ApplicationContextAware {
   
   private static final Logger LOGGER = LoggerFactory.getLogger(ArcGISAuthenticationProvider.class);
 
@@ -75,6 +78,8 @@ public class ArcGISAuthenticationProvider implements AuthenticationProvider {
   private String clientCertificateKey = null;
   private String trustStorePath =  null;
   private String trustStoreKey =  null;
+
+  private ApplicationContext applicationContext;
 
   /** True if all authenticated users shoudl have a Publisher role. */
   public boolean getAllUsersCanPublish() {
@@ -493,6 +498,11 @@ public class ArcGISAuthenticationProvider implements AuthenticationProvider {
    */
   private boolean isPKI() {
     return (getClientCertificatePath() != null && getClientCertificateKey() != null && getTrustStorePath() != null && getTrustStoreKey() != null);
+  }
+
+  @Override
+  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    this.applicationContext = applicationContext;
   }
 
 }

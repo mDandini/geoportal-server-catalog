@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans 
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+    http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.2.xsd">
+
+  <beans:bean id="arcgisAuthenticationProvider" class="com.esri.geoportal.base.security.ArcGISAuthenticationProvider">
+    <beans:property name="appId" value="6iJ2pLIj9UwcSdfA"/>
+    <beans:property name="authorizeUrl" value="http://localhost:5000/sharing/rest/oauth2/authorize"/>
+    <beans:property name="createAccountUrl" value="http://localhost:5000/home/createaccount.html"/>
+    <beans:property name="expirationMinutes" value="120" />
+    <beans:property name="geoportalAdministratorsGroupId" value="1234admin" />
+    <beans:property name="geoportalPublishersGroupId" value="1234publisher" />
+    <beans:property name="allUsersCanPublish" value="true" />
+    <beans:property name="rolePrefix" value="ROLE_" />
+    <beans:property name="showMyProfileLink" value="true" />
+
+    <!-- PKI-protected portal properties  -->
+    <beans:property name="clientCertificatePath" value="src/test/data/testKeystore.p12"/>
+    <beans:property name="clientCertificateKey" value="password"/>
+    <beans:property name="trustStorePath" value="src/test/data/testKeystore.p12"/>
+    <beans:property name="trustStoreKey" value="password"/>
+    
+  </beans:bean>
+
+  <security:global-method-security secured-annotations="enabled" />
+
+  <security:authentication-manager alias="authenticationManager">
+    <security:authentication-provider ref="arcgisAuthenticationProvider"/>
+  </security:authentication-manager>
+
+  <beans:bean id="testService" class="com.esri.testutil.TestService" />
+
+  <beans:bean id="geoportalContext" class="com.esri.geoportal.context.GeoportalContext">
+		<beans:property name="supportsApprovalStatus" value="false" />
+		<beans:property name="defaultApprovalStatus" value="" /> <!-- optional - approved|reviewed|disapproved|incomplete|posted|draft -->
+		<beans:property name="supportsGroupBasedAccess" value="true" />
+		<beans:property name="defaultAccessLevel" value="" /> <!-- optional - public|private -->
+	</beans:bean>
+
+</beans:beans>
