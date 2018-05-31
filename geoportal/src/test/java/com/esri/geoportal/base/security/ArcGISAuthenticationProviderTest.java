@@ -13,7 +13,13 @@ import org.junit.Rule;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.junit.MockServerRule;
 
+/**
+ * Base class for the ArcGIS Authentication Provider class.
+ * 
+ */
 public abstract class ArcGISAuthenticationProviderTest {
+   
+    // Set up the mock server for responding to the tests
     @Rule
     public MockServerRule mockServerRule = new MockServerRule(this, 5000);
     protected MockServerClient mockServer;
@@ -31,9 +37,15 @@ public abstract class ArcGISAuthenticationProviderTest {
     
     @After
     public void tearDown() {
+        // Reset the mock server's responses
         mockServer.reset();
     }
 
+    /**
+     * Generates a JSON object, containing a user entry
+     * 
+     * @return a JSON object, containing a user entry.
+     */
     protected JsonObject generateUserResponse() {
         return Json
             .createObjectBuilder()

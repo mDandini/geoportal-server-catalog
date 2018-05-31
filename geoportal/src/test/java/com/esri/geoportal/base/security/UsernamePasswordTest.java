@@ -24,6 +24,9 @@ import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+/**
+ * Tests the {@link ArcGISAuthenticationProvider} class with a username/password login
+ */
 @RunWith(SpringRunner.class)
 @ContextConfiguration("/config/test-app-security.xml")
 @DirtiesContext(classMode=ClassMode.AFTER_CLASS)
