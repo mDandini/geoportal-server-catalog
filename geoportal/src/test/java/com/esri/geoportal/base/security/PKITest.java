@@ -3,6 +3,8 @@ package com.esri.geoportal.base.security;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
+import javax.json.Json;
+
 import com.esri.testutil.TestService;
 
 import org.junit.Test;
@@ -10,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.mockserver.model.HttpStatusCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -55,4 +58,53 @@ public class PKITest extends ArcGISAuthenticationProviderTest {
         testService.adminMethod();
     }
 
+    @Test(expected=AuthenticationServiceException.class)
+    public void testHttpError() {
+        String token = "abcde123";
+
+        // /generateToken isn't called when using PKI (the token comes from the user's request). So we just need to handle the group request.
+
+        mockServer.when(
+            request()
+                .withMethod("GET")
+                .withPath("/sharing/rest/community/users/gptadmin")
+                .withQueryStringParameter("f", "json")
+        )
+        .respond(
+            response()
+                .withStatusCode(HttpStatusCode.NO_CONTENT_204.code())  
+                .withHeader("Content-Type", "application/json")
+                .withBody(Json.createObjectBuilder().add("error", Json.createObjectBuilder().add("message", "Exception")).build().toString())
+        );
+
+        Authentication authToken = new UsernamePasswordAuthenticationToken("gptadmin", "__rtkn__:" + token);
+        SecurityContextHolder.getContext().setAuthentication(authToken);
+        TestService testService = (TestService) applicationContext.getBean("testService");
+        testService.adminMethod();
+    }
+
+    @Test(expected=AuthenticationServiceException.class)
+    public void testAuthError() {
+        String token = "abcde123";
+
+        // /generateToken isn't called when using PKI (the token comes from the user's request). So we just need to handle the group request.
+
+        mockServer.when(
+            request()
+                .withMethod("GET")
+                .withPath("/sharing/rest/community/users/gptadmin")
+                .withQueryStringParameter("f", "json")
+        )
+        .respond(
+            response()
+                .withStatusCode(HttpStatusCode.OK_200.code())
+                .withHeader("Content-Type", "application/json")
+                .withBody(Json.createObjectBuilder().add("error", Json.createObjectBuilder().add("message", "Exception")).build().toString())  
+        );
+
+        Authentication authToken = new UsernamePasswordAuthenticationToken("gptadmin", "__rtkn__:" + token);
+        SecurityContextHolder.getContext().setAuthentication(authToken);
+        TestService testService = (TestService) applicationContext.getBean("testService");
+        testService.adminMethod();
+    }
 }
