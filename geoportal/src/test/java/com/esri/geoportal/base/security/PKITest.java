@@ -1,17 +1,12 @@
 package com.esri.geoportal.base.security;
 
-import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 import com.esri.testutil.TestService;
 
-import org.junit.After;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockserver.client.server.MockServerClient;
-import org.mockserver.junit.MockServerRule;
 import org.mockserver.model.HttpStatusCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
